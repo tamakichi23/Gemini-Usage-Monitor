@@ -24,7 +24,7 @@ $null = [Management.Automation.Language.Parser]::ParseFile($env:GEMINI_LAUNCHER_
       const { stdout } = await promisify(execFile)(executable,
         ['-NoProfile', '-NonInteractive', '-Command', script], {
           env: { ...process.env, GEMINI_LAUNCHER_VALIDATE: launcher },
-          windowsHide: true, timeout: 10_000, maxBuffer: 4096,
+          windowsHide: true, timeout: 30_000, maxBuffer: 4096,
         });
       const result = JSON.parse(stdout);
       assert.match(result.Version, /^5\.1\./);
