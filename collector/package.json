@@ -1,0 +1,9 @@
+{
+  "name": "gemini-usage-monitor-collector",
+  "version": "0.1.11",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test", "collect": "node cli.mjs collect", "login": "node cli.mjs login" },
+  "dependencies": { "playwright-core": "1.63.0" }
+}

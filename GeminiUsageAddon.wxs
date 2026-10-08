@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="Gemini Usage Monitor"
+           Language="1041"
+           Version="$(var.ProductVersion)"
+           Codepage="932"
+           Manufacturer="Tamakichi23"
+           UpgradeCode="{A473A41A-5FB7-4BE4-B2C8-6A7F168DCE29}">
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perUser"
+             Platform="x64" />
+    <MajorUpgrade Schedule="afterInstallInitialize"
+                  DowngradeErrorMessage="新しいバージョンのGemini Usage Monitorが既にインストールされています。" />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="GeminiUsageAddonIcon" SourceFile="$(var.AddonSource)\GeminiUsageAddon.ico" />
+    <Binary Id="GeminiUsageAddonCleanupBinary" SourceFile="$(var.AddonSource)\GeminiUsageAddon.exe" />
+    <Property Id="ARPPRODUCTICON" Value="GeminiUsageAddonIcon" />
+    <Property Id="ARPCOMMENTS" Value="WindowsタスクバーにGeminiの使用量を表示する独立アプリです。" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    <CustomAction Id="SetARPInstallLocation"
+                  Property="ARPINSTALLLOCATION"
+                  Value="[INSTALLFOLDER]" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="INSTALLFOLDER" Name="GeminiUsageAddon" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Gemini Usage Monitor" />
+      </Directory>
+      <Directory Id="StartupFolder" />
+    </Directory>
+
+    <Feature Id="ProductFeature" Title="Gemini Usage Monitor" Level="1">
+      <ComponentGroupRef Id="AddonFiles" />
+      <ComponentGroupRef Id="AddonFolderCleanup" />
+      <ComponentRef Id="InstallFolderCleanupComponent" />
+      <ComponentRef Id="RemoveLegacyLauncherComponent" />
+      <ComponentRef Id="StartupShortcutComponent" />
+      <ComponentRef Id="ProgramMenuShortcutsComponent" />
+    </Feature>
+
+    <DirectoryRef Id="StartupFolder">
+      <Component Id="StartupShortcutComponent" Guid="{BFD6A278-5D7C-492C-B606-3DBB85B7949A}">
+        <Shortcut Id="GeminiUsageAddonStartupShortcut"
+                  Name="Gemini Usage Monitor"
+                  Description="Gemini Usage Monitorをサインイン時に起動します"
+                  Target="[INSTALLFOLDER]GeminiUsageAddon.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="GeminiUsageAddonIcon"
+                  IconIndex="0" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\PersonalAddons\GeminiUsageAddon\Installer"
+                       Name="StartupShortcut"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="InstallFolderCleanupComponent" Guid="{995D98A1-5F0D-443B-B9DA-45C25D66CF3B}">
+        <RemoveFolder Id="RemoveGeminiUsageAddonInstallFolder" On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\PersonalAddons\GeminiUsageAddon\Installer"
+                       Name="InstallFolder"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+      <Component Id="RemoveLegacyLauncherComponent" Guid="{EA8C24A0-ABBD-4D7E-9989-6E6AD4E5FD3F}">
+        <RemoveFile Id="RemoveLegacyGeminiUsageLauncher" Name="GeminiUsageAddon.exe" On="install" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\PersonalAddons\GeminiUsageAddon\Installer"
+                       Name="RemoveLegacyLauncher"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ProgramMenuShortcutsComponent" Guid="{5E21B922-AD2F-40FB-A607-8B7DB1C3C3A6}">
+        <Shortcut Id="GeminiUsageAddonToggleShortcut"
+                  Name="Gemini Usage Monitor"
+                  Description="Gemini Usage Monitorの表示を切り替えます"
+                  Target="[INSTALLFOLDER]GeminiUsageAddon.exe"
+                  Arguments="-Toggle"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="GeminiUsageAddonIcon"
+                  IconIndex="0" />
+        <Shortcut Id="GeminiUsageAddonStartupToggleShortcut"
+                  Name="Gemini Usage Monitor - 自動起動"
+                  Description="Gemini Usage Monitorのサインイン時起動を切り替えます"
+                  Target="[INSTALLFOLDER]GeminiUsageAddon.exe"
+                  Arguments="-ToggleStartup"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="GeminiUsageAddonIcon"
+                  IconIndex="0" />
+        <RemoveFolder Id="RemoveGeminiUsageAddonProgramMenuFolder" On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\PersonalAddons\GeminiUsageAddon\Installer"
+                       Name="ProgramMenuShortcuts"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <CustomAction Id="RemoveLegacyUninstallRegistration"
+                  BinaryKey="GeminiUsageAddonCleanupBinary"
+                  ExeCommand="--cleanup-legacy-registration"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="ignore" />
+
+    <InstallExecuteSequence>
+      <Custom Action="SetARPInstallLocation" Before="RegisterProduct">NOT Installed</Custom>
+      <Custom Action="RemoveLegacyUninstallRegistration" Before="InstallFinalize">NOT Installed</Custom>
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
