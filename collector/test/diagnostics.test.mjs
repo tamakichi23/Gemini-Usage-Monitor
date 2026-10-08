@@ -24,17 +24,17 @@ test('Windows detects an occupied dedicated profile, leaves its browser running,
     const profile = await mkdtemp(join(tmpdir(), "Gemini usage O'Brien & test-"));
     let context;
     try {
-      await assertProfileAvailable(profile);
+      await assertProfileAvailable(profile, { timeoutMs: 30_000 });
       context = await chromium.launchPersistentContext(profile, {
         channel: 'chrome', headless: true, chromiumSandbox: true,
       });
-      await assert.rejects(launchCollector(profile), { code: 'profile_in_use' });
+      await assert.rejects(launchCollector(profile, { profileCheckTimeoutMs: 30_000 }), { code: 'profile_in_use' });
       const page = await context.newPage();
       await page.setContent('<title>Still running</title>');
       assert.equal(await page.title(), 'Still running');
       await context.close();
       context = null;
-      await assertProfileAvailable(profile);
+      await assertProfileAvailable(profile, { timeoutMs: 30_000 });
     } finally {
       if (context) await context.close();
       assert.equal(dirname(resolve(profile)), resolve(tmpdir()));

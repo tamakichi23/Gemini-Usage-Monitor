@@ -18,8 +18,8 @@ export function readUsageDOM() {
   };
 }
 
-export async function launchCollector(profile) {
-  await assertProfileAvailable(profile);
+export async function launchCollector(profile, { profileCheckTimeoutMs = 10_000 } = {}) {
+  await assertProfileAvailable(profile, { timeoutMs: profileCheckTimeoutMs });
   return chromium.launchPersistentContext(profile, {
     channel: 'chrome', headless: true, locale: 'ja-JP', timezoneId: 'Asia/Tokyo',
     chromiumSandbox: true, ignoreHTTPSErrors: false, acceptDownloads: false,

@@ -25,14 +25,14 @@ foreach ($taskProcess in @(Get-CimInstance Win32_Process -Filter "Name = 'chrome
 [Console]::Out.Write('available')
 `;
 
-export async function assertProfileAvailable(profile) {
+export async function assertProfileAvailable(profile, { timeoutMs = 10_000 } = {}) {
   if (process.platform !== 'win32') return;
   try {
     const executable = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32',
       'WindowsPowerShell', 'v1.0', 'powershell.exe');
     const { stdout } = await run(executable, ['-NoProfile', '-NonInteractive', '-Command', query], {
       env: { ...process.env, GEMINI_USAGE_PROFILE_CHECK: resolve(profile) },
-      windowsHide: true, timeout: 10_000, maxBuffer: 4096,
+      windowsHide: true, timeout: timeoutMs, maxBuffer: 4096,
     });
     if (stdout.trim() === 'in_use') throw new UsageError('profile_in_use');
     if (stdout.trim() !== 'available') throw new UsageError('profile_check_failed');
