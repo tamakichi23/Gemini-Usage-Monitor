@@ -16,8 +16,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install WiX Toolset 3
-        run: choco install wixtoolset --version=3.14.1 -y --no-progress
+      - name: Ensure WiX Toolset 3 is available
+        shell: pwsh
+        run: |
+          if (-not (Get-Command candle.exe -ErrorAction SilentlyContinue)) {
+            choco install wixtoolset -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "Chocolatey could not install WiX Toolset 3" }
+          }
+          Get-Command candle.exe -ErrorAction Stop | Out-Null
       - name: Test collector
         working-directory: collector
         run: |
