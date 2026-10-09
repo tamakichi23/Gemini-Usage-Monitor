@@ -20,7 +20,7 @@ Gemini Usage Monitor は、Gemini の使用状況ページを読み取り、5時
 
 ### 操作と更新
 
-通知領域アイコンのメニューから、バーの表示、自動起動、Google アカウント切り替え、使用状況ページを操作できます。Windows の **設定 → アプリ → インストールされているアプリ** からアンインストールできます。更新時は新しい MSI を上書きインストールします。
+通知領域アイコンのメニューから、使用状況の手動更新、バーの表示、自動起動、Google アカウント切り替え、使用状況ページを操作できます。手動更新は監視中の取得プロセスに依頼するため、Chromeを二重起動しません。Windows の **設定 → アプリ → インストールされているアプリ** からアンインストールできます。更新時は新しい MSI を上書きインストールします。
 
 ### 取得情報と保存先
 
@@ -60,7 +60,9 @@ generation as well as other Gemini activity.
 Download the latest MSI from [GitHub Releases](https://github.com/tamakichi23/Gemini-Usage-Monitor/releases/latest),
 install it, and start **Gemini Usage Monitor** from the Start menu. Use the tray
 menu's **Googleアカウントを切り替える** command to sign in through its
-dedicated Chrome profile. Node.js 22 or later and Google Chrome are required.
+dedicated Chrome profile. The tray menu can also request an immediate refresh;
+it signals the existing collector instead of starting a second Chrome process.
+Node.js 22 or later and Google Chrome are required.
 
 Usage snapshots and the dedicated browser profile stay on the PC. The app polls
 every five minutes, and uninstalling preserves that local data. New installs

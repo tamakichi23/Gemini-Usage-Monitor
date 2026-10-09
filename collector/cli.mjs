@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
+import { consumeRefreshRequest } from './watch-control.mjs';
 import { collect, launchCollector, USAGE_URL } from './collector.mjs';
 import { accountSwitchSnapshot, failureSnapshot, parseUsage, UsageError } from './parser.mjs';
 import { classify } from './diagnostics.mjs';
@@ -14,6 +15,7 @@ const { values, positionals } = parseArgs({ allowPositionals: true, options: {
   profile: { type: 'string' }, out: { type: 'string' }, fixture: { type: 'string' },
   interval: { type: 'string', default: '300' },
   'stop-file': { type: 'string' },
+  'refresh-file': { type: 'string' },
 } });
 const appData = process.env.LOCALAPPDATA ?? join(homedir(), '.local', 'share');
 const appRoot = join(appData, 'GeminiUsageMonitor');
@@ -132,6 +134,7 @@ try {
       await cycle();
       const next = Date.now() + seconds * 1000;
       while (!stopped() && Date.now() < next) {
+        if (await consumeRefreshRequest(values['refresh-file'])) break;
         await delay(Math.min(1000, next - Date.now()), null, { signal: controller.signal }).catch(() => {});
       }
     }

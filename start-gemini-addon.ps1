@@ -26,6 +26,7 @@ $taskScript = [IO.Path]::GetFullPath($PSCommandPath)
 $taskSwitchProcess = $null
 $taskSwitchStopFiles = @()
 $taskSwitchRestartPending = $false
+$taskRefreshFile = $null
 
 function Stop-GeminiCollectorForAccountSwitch {
     $script:taskSwitchStopFiles = @()
@@ -54,7 +55,8 @@ function Start-GeminiCollectorWorker {
     if ($taskExistingWatcher) { return }
 
     $script:taskStopFile = Join-Path ([IO.Path]::GetTempPath()) ('gemini-addon-stop-' + [guid]::NewGuid().ToString('N'))
-    $taskArguments = '"' + $taskCli + '" watch --interval 300 --stop-file "' + $script:taskStopFile + '"'
+    $script:taskRefreshFile = Join-Path ([IO.Path]::GetTempPath()) ('gemini-addon-refresh-' + [guid]::NewGuid().ToString('N'))
+    $taskArguments = '"' + $taskCli + '" watch --interval 300 --refresh-file "' + $script:taskRefreshFile + '" --stop-file "' + $script:taskStopFile + '"'
     $script:taskWorker = Start-Process -FilePath $taskNode -ArgumentList $taskArguments -WorkingDirectory $taskCollector -WindowStyle Hidden -PassThru
     $script:taskOwnWorker = $true
 }
@@ -379,11 +381,13 @@ try {
         $taskExistingWorker = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" |
             Where-Object { $_.CommandLine -and $_.CommandLine.Contains($taskCli) -and $_.CommandLine -match '(^|\s)watch(\s|$)' } |
             Select-Object -First 1
-        if (-not $taskExistingWorker) {
-            $taskStopFile = Join-Path ([IO.Path]::GetTempPath()) ('gemini-addon-stop-' + [guid]::NewGuid().ToString('N'))
-            $taskArguments = '"' + $taskCli + '" watch --interval 300 --stop-file "' + $taskStopFile + '"'
-            $taskWorker = Start-Process -FilePath $taskNode -ArgumentList $taskArguments -WorkingDirectory $taskCollector -WindowStyle Hidden -PassThru
-            $taskOwnWorker = $true
+        if ($taskExistingWorker) {
+            $taskRefreshMatch = [regex]::Match($taskExistingWorker.CommandLine, '--refresh-file\s+"([^"]+)"|--refresh-file\s+([^\s]+)')
+            if ($taskRefreshMatch.Success) {
+                $taskRefreshFile = if ($taskRefreshMatch.Groups[1].Success) { $taskRefreshMatch.Groups[1].Value } else { $taskRefreshMatch.Groups[2].Value }
+            }
+        } else {
+            Start-GeminiCollectorWorker
         }
     }
 
@@ -401,7 +405,7 @@ try {
     $taskForm.TopMost = $false
     $taskForm.StartPosition = [System.Windows.Forms.FormStartPosition]::Manual
     $taskForm.Text = 'Gemini Usage Monitor'
-    $taskForm.ClientSize = New-Object System.Drawing.Size(126, 46)
+    $taskForm.ClientSize = New-Object System.Drawing.Size(148, 46)
     $taskForm.Opacity = 1.0
     $taskForm.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::Dpi
 
@@ -425,7 +429,7 @@ try {
 
     $taskSessionLabel = New-Object System.Windows.Forms.Label
     $taskSessionLabel.Location = New-Object System.Drawing.Point(62, 9)
-    $taskSessionLabel.Size = New-Object System.Drawing.Size(62, 13)
+    $taskSessionLabel.Size = New-Object System.Drawing.Size(83, 13)
     $taskSessionLabel.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 9.0)
     $taskSessionLabel.BackColor = [System.Drawing.Color]::Transparent
     $taskSessionLabel.ForeColor = [System.Drawing.Color]::FromArgb(196, 181, 253)
@@ -435,7 +439,7 @@ try {
 
     $taskWeeklyLabel = New-Object System.Windows.Forms.Label
     $taskWeeklyLabel.Location = New-Object System.Drawing.Point(62, 25)
-    $taskWeeklyLabel.Size = New-Object System.Drawing.Size(62, 13)
+    $taskWeeklyLabel.Size = New-Object System.Drawing.Size(83, 13)
     $taskWeeklyLabel.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 9.0)
     $taskWeeklyLabel.BackColor = [System.Drawing.Color]::Transparent
     $taskWeeklyLabel.ForeColor = [System.Drawing.Color]::FromArgb(196, 181, 253)
@@ -451,6 +455,20 @@ try {
     $taskBorder.SendToBack()
 
     $taskMenu = New-Object System.Windows.Forms.ContextMenuStrip
+    $taskRefreshItem = New-Object System.Windows.Forms.ToolStripMenuItem('今すぐ更新')
+    $taskRefreshItem.Enabled = [bool]$taskRefreshFile -and [bool]$taskNode -and -not $NoCollector
+    $taskRefreshItem.add_Click({
+        try {
+            if ([string]::IsNullOrWhiteSpace($script:taskRefreshFile)) { throw 'Refresh control is unavailable.' }
+            [IO.File]::WriteAllText($script:taskRefreshFile, [DateTimeOffset]::UtcNow.ToString('o'))
+            $taskNotify.ShowBalloonTip(3500, 'Gemini使用量', '使用状況の更新を要求しました。完了まで少しお待ちください。', [System.Windows.Forms.ToolTipIcon]::Info)
+        } catch {
+            $taskNotify.ShowBalloonTip(5000, 'Gemini使用量を更新できませんでした', '監視プロセスが起動しているか確認してください。', [System.Windows.Forms.ToolTipIcon]::Warning)
+        }
+    })
+    $taskMenu.Items.Add($taskRefreshItem) | Out-Null
+    $taskMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator)) | Out-Null
+
     $taskDisplayItem = New-Object System.Windows.Forms.ToolStripMenuItem('バーを表示')
     $taskDisplayItem.CheckOnClick = $true
     $taskDisplayItem.Checked = $true

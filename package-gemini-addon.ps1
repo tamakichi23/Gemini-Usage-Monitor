@@ -53,7 +53,7 @@ $taskFiles = @(
     @{ Source = $taskLauncherIconBuildPath; Entry = 'GeminiUsageAddon\GeminiUsageAddon.ico' },
     @{ Source = $taskLauncherBuildPath; Entry = 'GeminiUsageAddon\GeminiUsageAddon.exe' }
 )
-foreach ($taskName in @('cli.mjs', 'collector.mjs', 'diagnostics.mjs', 'parser.mjs', 'profile.mjs', 'package.json', 'package-lock.json')) {
+foreach ($taskName in @('cli.mjs', 'collector.mjs', 'diagnostics.mjs', 'parser.mjs', 'profile.mjs', 'watch-control.mjs', 'package.json', 'package-lock.json')) {
     $taskFiles += @{ Source = Join-Path $taskCollectorSource $taskName; Entry = ('GeminiUsageAddon\collector\' + $taskName) }
 }
 Get-ChildItem -LiteralPath (Join-Path $taskCollectorSource 'node_modules\playwright-core') -File -Recurse | ForEach-Object {
@@ -79,7 +79,7 @@ try {
 
 $taskCheck = [IO.Compression.ZipFile]::OpenRead($taskOutputPath)
 try {
-    $taskRequired = @('GeminiUsageAddon\install-gemini-addon.ps1', 'GeminiUsageAddon\start-gemini-addon.ps1', 'GeminiUsageAddon\uninstall-gemini-addon.ps1', 'GeminiUsageAddon\GeminiUsageAddon.exe', 'GeminiUsageAddon\GeminiUsageAddon.ico', 'GeminiUsageAddon\LICENSE', 'GeminiUsageAddon\THIRD_PARTY_NOTICES.md', 'GeminiUsageAddon\licenses\playwright-core\LICENSE', 'GeminiUsageAddon\licenses\playwright-core\NOTICE', 'GeminiUsageAddon\collector\cli.mjs', 'GeminiUsageAddon\collector\node_modules\playwright-core\package.json')
+    $taskRequired = @('GeminiUsageAddon\install-gemini-addon.ps1', 'GeminiUsageAddon\start-gemini-addon.ps1', 'GeminiUsageAddon\uninstall-gemini-addon.ps1', 'GeminiUsageAddon\GeminiUsageAddon.exe', 'GeminiUsageAddon\GeminiUsageAddon.ico', 'GeminiUsageAddon\LICENSE', 'GeminiUsageAddon\THIRD_PARTY_NOTICES.md', 'GeminiUsageAddon\licenses\playwright-core\LICENSE', 'GeminiUsageAddon\licenses\playwright-core\NOTICE', 'GeminiUsageAddon\collector\cli.mjs', 'GeminiUsageAddon\collector\watch-control.mjs', 'GeminiUsageAddon\collector\node_modules\playwright-core\package.json')
     $taskEntries = @($taskCheck.Entries | ForEach-Object { $_.FullName })
     foreach ($taskEntry in $taskRequired) {
         if ($taskEntry -notin $taskEntries) { throw ('The package is missing required entry: ' + $taskEntry) }

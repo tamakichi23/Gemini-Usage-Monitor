@@ -1,10 +1,11 @@
-# Gemini Usage Monitor 0.1.11
+# Gemini Usage Monitor 0.1.12
 
-First standalone release under the Tamakichi23 account.
+Display and refresh improvements.
 
-- Displays remaining usage and reset times for Gemini's five-hour and weekly windows on the Windows taskbar.
-- Runs independently. When Claude Code Usage Monitor is present, the Gemini bars can sit beside its taskbar widget.
-- Includes Google account switching from the notification-area menu and Windows sign-in startup controls.
-- Keeps the dedicated Chrome profile and usage snapshot on the local PC.
+- Widen the taskbar display so longer reset labels such as `~100% · 59m` fit completely.
+- Add an **今すぐ更新** command to the notification-area menu. It signals the existing collector to refresh immediately without launching a second Chrome process.
+- Keep the existing Gemini quota display, account switching, startup controls, and local profile behavior.
 
-Gemini does not expose a separate video quota or remaining video-generation count on the usage page; the app displays the shared usage quota only. Requires Windows 10/11 x64, Node.js 22 or later, and Google Chrome. The installer is currently unsigned.
+Requires Windows 10/11 x64, Node.js 22 or later, and Google Chrome. The installer is currently unsigned.
+
+The Gemini usage page exposes a shared quota, not a separate video-generation limit; the app continues to display the shared five-hour and weekly quotas.
